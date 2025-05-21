@@ -4,14 +4,14 @@ const userSchema = new mongoose.Schema({
     username: {
         type: String,
         required: [true, "Username is required!"],
-        trim: true,
+        trim: true
     },
     email: {
         type: String,
         required: [true, "Email is required!"],
         unique: [true, "Email must be unique!"],
         lowercase: [true, "Email must be in lowercase!"],
-        trim: true,
+        trim: true
     },
     password: {
         type: String,   
@@ -20,13 +20,23 @@ const userSchema = new mongoose.Schema({
     watchlist: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "watchItem"
+            ref: "asset"
         }
     ],
     role: {
         type: String,
         enum: ["user", "admin"],
-        default: "user",
+        default: "user"
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    opt: { 
+        type: String 
+    },
+    otpExpiry: { 
+        type: Date 
     }
 }, { timestamps: true });
 
