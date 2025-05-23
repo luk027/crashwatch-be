@@ -1,28 +1,34 @@
 import mongoose from "mongoose";
 
 const assetSchema = new mongoose.Schema({
-    fullName: { 
+    name: { 
       type: String
     },
     shortName: { 
       type: String
     },
-    detail: { 
+    link: { 
+      type: String 
+    },
+    pairType: { 
+      type: String  
+    },
+    isCrypto: { 
+      type: Boolean 
+    },
+    country: { 
       type: String 
     },
     currentPrice: { 
       type: Number 
     },
-    priceChange: { 
+    change: { 
       type: Number 
     },
-    priceChangeInPercent: { 
+    dayRange: { 
       type: Number 
     },
-    url: { 
-      type: String 
-    },
-    type: { 
+    technicalSummary: {
       type: String 
     }
   }, { timestamps: true });

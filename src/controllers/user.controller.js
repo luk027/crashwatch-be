@@ -1,7 +1,9 @@
 import { User } from "../database/models/user.model.js";
+import { Asset } from "../database/models/asset.model.js";
 import nodemailer from "nodemailer";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+
 
 //Generate JWT Token
 const generateAuthToken = (userId) => {
@@ -28,7 +30,6 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASSWORD
     }
 });
-
 
 export const signup = async(req, res) => {
     const { username, email, password, role, isVerified } = req.body;
@@ -242,3 +243,49 @@ export const updateUserData = async(req, res) => {
         res.status(500).json({ message: "Internal Server Error!" });
     }
 }
+
+export const addResultToWatchlist = async(req, res) => {
+    const { name, shortName, link, pairType, isCrypto, country } = req.body;
+    const userId = req.user._id;
+    try {
+      if (!name || !shortName || !link || !pairType || !isCrypto || !country) {
+        return res.status(400).json({ message: "All fields are required!" });
+      }
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found!" });
+      }
+      if (!user.isVerified) {
+        return res.status(401).json({ message: "User not verified!" });
+      }
+  
+      // Check if the asset already exists
+      const existingAsset = await Asset.findOne({ name, shortName, link });
+      if (existingAsset) {
+        return res.status(409).json({ message: "Asset already exists in watchlist!" });
+      }
+  
+      // Create a new asset
+      const newAsset = new Asset({
+        name,
+        shortName,
+        link,
+        pairType,
+        isCrypto,
+        country,
+      });
+
+      const data = await newAsset.save();
+      user.watchlist.push(data._id);
+      await user.save();
+      
+      res.status(201).json({
+        success: true,
+        message: "Asset added to watchlist successfully!",
+        data: newAsset,
+      });
+    } catch (error) {
+        console.log("Error While adding to watchlist", error.message);
+        res.status(500).json({ message: "Internal Server Error!" });
+    }
+  }
