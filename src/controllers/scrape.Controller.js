@@ -85,5 +85,5 @@ export const getSearchResults = async(req, res) => {
 }
 
 export const getAssetDetails = async(req, res) => {
-  
+
 }
