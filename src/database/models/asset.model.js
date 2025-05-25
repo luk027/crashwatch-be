@@ -2,34 +2,24 @@ import mongoose from "mongoose";
 
 const assetSchema = new mongoose.Schema({
     name: { 
-      type: String
+      type: String,
+      required: [true, "Asset name is required!"],
+      trim: true
     },
-    shortName: { 
-      type: String
+    shortName: {   //shortName aka symbol
+      type: String,
+      trim: true,
     },
     link: { 
-      type: String 
+      type: String,
+      trim: true
     },
     pairType: { 
       type: String  
     },
     isCrypto: { 
-      type: Boolean 
-    },
-    country: { 
-      type: String 
-    },
-    currentPrice: { 
-      type: Number 
-    },
-    change: { 
-      type: Number 
-    },
-    dayRange: { 
-      type: Number 
-    },
-    technicalSummary: {
-      type: String 
+      type: Boolean,
+      default: false
     }
   }, { timestamps: true });
   

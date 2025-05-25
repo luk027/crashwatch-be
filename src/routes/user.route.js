@@ -9,7 +9,7 @@ import {
 
 const router = express.Router()
 
-// USER ROUTES
+// User Routes
 router.post("/signup", userValidation.signup, userControllers.signup);
 router.post("/verify-otp", userValidation.verifyOTP, userControllers.verifyOTP);
 router.post("/resend-otp", userValidation.resendOTP, userControllers.resendOTP);
@@ -22,5 +22,6 @@ router.delete("/remove-from-list/:id", userControllers.removeAssetFromWatchlist)
 
 //Scraping Routes
 router.post("/search", scrapeControllers.getSearchResults);
+router.get("/fetch-all-assets", authenticateUser, scrapeControllers.fetchUserAssetDetails);
 
 export const userRouter = router;

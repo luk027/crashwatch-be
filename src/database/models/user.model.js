@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, "Email is required!"],
         unique: [true, "Email must be unique!"],
-        lowercase: [true, "Email must be in lowercase!"],
+        lowercase: true,
         match: [/.+\@.+\..+/, 'Please enter a valid email address'],
         trim: true
     },
@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    opt: { 
+    otp: { 
         type: String 
     },
     otpExpiry: { 

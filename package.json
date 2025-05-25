@@ -19,6 +19,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.14.2",
     "nodemailer": "^7.0.3",
+    "p-limit": "^6.2.0",
     "puppeteer": "^24.9.0"
   },
   "devDependencies": {

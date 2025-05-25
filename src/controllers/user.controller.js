@@ -13,6 +13,7 @@ const generateAuthToken = (userId) => {
 //Generate OTP
 const generateOTP = () => {
     const otp = Math.floor(1000 + Math.random() * 9000);
+    return otp;
 }
 //Generate Random Password
 const generateRandomPassword = () => {
@@ -97,7 +98,7 @@ export const verifyOTP = async(req, res) => {
                 username: user.username,
                 email: user.email,
                 role: user.role,
-                verified: user.verified,
+                isVerified: user.isVerified,
             },
             token
         });
@@ -109,7 +110,7 @@ export const verifyOTP = async(req, res) => {
 export const resendOTP = async(req, res) => {
     try {
         const { email } = req.body;
-        const user = user.findOne({ email });
+        const user = User.findOne({ email });
         if(!user) {
             return res.status(404).json({ message: "User not found!" });
         };
@@ -137,7 +138,7 @@ export const resendOTP = async(req, res) => {
 export const login = async(req, res) => {
     const { email, password } = req.body;
     try {
-        const user = await findOne({ email });
+        const user = await User.findOne({ email });
         if(!user) {
             return res.status(404).json({ message: "User not found!" });
         };
@@ -162,7 +163,7 @@ export const login = async(req, res) => {
                 username: user.username,
                 email: user.email,
                 role: user.role,
-                verified: user.verified,
+                isVerified: user.isVerified,
             },
             token
         });
@@ -205,6 +206,8 @@ export const forgotPassword = async(req, res) => {
             subject: "Forgot Password For CrashWatch",
             text: `Your new password is ${newPassword}. Please change it after logging in.`
         });
+
+        res.status(200).json({ message: `New password sent to ${email}.` });
     } catch (error) {
         console.log("Error While forgot password", error.message);
         res.status(500).json({ message: "Internal Server Error!" });
@@ -238,7 +241,7 @@ export const updateUserData = async(req, res) => {
             user.password = hashPassword;
         }
         await user.save();
-        res.status(200).json({ message: "Password updated successfully!" });
+        res.status(200).json({ message: "User data updated successfully!" });
     } catch (error) {
         console.log("Error While updating password", error.message);
         res.status(500).json({ message: "Internal Server Error!" });
@@ -246,10 +249,10 @@ export const updateUserData = async(req, res) => {
 }
 
 export const addAssetToWatchlist = async (req, res) => {
-  const { name, shortName, link, pairType, isCrypto, country } = req.body;
+  const { name, shortName, link, pairType, isCrypto } = req.body;
   const userId = req.user._id;
   try {
-    if (!name || !shortName || !link || !pairType || !isCrypto || !country) {
+    if (!name || !shortName || !link || !pairType || !isCrypto ) {
       return res.status(400).json({ message: "All fields are required!" });
     }
     const user = await User.findById(userId);
@@ -275,7 +278,6 @@ export const addAssetToWatchlist = async (req, res) => {
       link,
       pairType,
       isCrypto,
-      country,
     });
 
     const data = await newAsset.save();
@@ -321,7 +323,3 @@ export const removeAssetFromWatchlist = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error!" });
   }
 };
-
-export const getWatchlist = async(req, res) => {
-
-}
