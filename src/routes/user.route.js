@@ -17,11 +17,11 @@ router.post("/forgot-password", userValidation.forgotPassword, userControllers.f
 router.post("/login", userValidation.login, userControllers.login);
 router.put("/update-user-data", userValidation.updateUserData, authenticateUser, userControllers.updateUserData);
 router.post("/logout", userControllers.logout);
-router.post("/add-to-list", userControllers.addAssetToWatchlist);
-router.delete("/remove-from-list/:id", userControllers.removeAssetFromWatchlist);
+router.post("/add-to-list", authenticateUser, userControllers.addAssetToWatchlist);
+router.delete("/remove-from-list/:id", authenticateUser, userControllers.removeAssetFromWatchlist);
 
 //Scraping Routes
-router.post("/search", scrapeControllers.getSearchResults);
+router.post("/search", authenticateUser, scrapeControllers.getSearchResults);
 router.get("/fetch-all-assets", authenticateUser, scrapeControllers.fetchUserAssetDetails);
 
 export const userRouter = router;

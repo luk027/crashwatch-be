@@ -116,21 +116,24 @@ export const fetchUserAssetDetails = async (req, res) => {
 
       try {
         await page.goto(link, { waitUntil: "domcontentloaded", timeout: 25000 });
-        await page.waitForSelector(".instrument-price_last__KQzyA", { timeout: 8000 });
+        try {
+          await page.waitForSelector("span[data-test='instrument-price-last']", { timeout: 15000 });
+        } catch (e) {
+          console.warn(`Selector not found on page ${link}:`, e.message);
+          return { name: link, error: "Selector not found" };
+        }
 
         const details = await page.evaluate(() => {
           const getText = (selector) =>
             document.querySelector(selector)?.textContent.trim() || "N/A";
-
+        
           return {
             name: getText("h1"),
-            currentPrice: getText(".instrument-price_last__KQzyA"),
-            change: getText(".instrument-price_change-value__jkuml"),
-            dayRange: getText('td[data-test="range"]'),
-            technicalSummary: getText(".technicalSummaryTbl .summary span"),
+            currentPrice: getText("span[data-test='instrument-price-last']"),
+            change: getText("span[data-test='instrument-price-change']")
           };
         });
-
+        
         return details;
       } catch (err) {
         console.error(`Error scraping ${link}:`, err.message);
@@ -141,7 +144,6 @@ export const fetchUserAssetDetails = async (req, res) => {
     const assetDetails = await Promise.all(
       assetLinks.map((link) => limit(() => scrapeAsset(link)))
     );
-
     await Promise.all(pages.map((page) => page.close()));
     await browser.close();
 

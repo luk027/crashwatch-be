@@ -1,10 +1,10 @@
+import "dotenv/config";
 import { User } from "../database/models/user.model.js";
 import { Asset } from "../database/models/asset.model.js";
 import nodemailer from "nodemailer";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-
 
 //Generate JWT Token
 const generateAuthToken = (userId) => {
@@ -26,7 +26,7 @@ const generateRandomPassword = () => {
 }
 //Send Email
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    service: "Gmail",
     auth: {
         user: process.env.EMAIL,
         pass: process.env.EMAIL_PASSWORD
@@ -34,7 +34,7 @@ const transporter = nodemailer.createTransport({
 });
 
 export const signup = async(req, res) => {
-    const { username, email, password, role, isVerified } = req.body;
+    const { username, email, password, } = req.body;
     try {
         const isExistingUser = await User.findOne({ email });
         if(isExistingUser) {
@@ -47,19 +47,21 @@ export const signup = async(req, res) => {
             username,
             email,
             password: hashPassword,
-            role,
             otp,
             otpExpiry
         });
         await newUser.save();
 
         //Send verification email
-        await transporter.sendMail({
+        const successfullySentMail = await transporter.sendMail({
             from: process.env.EMAIL,
             to: email,
             subject: "OTP Verification For CrashWatch",
             text: `Your OTP is ${otp}. It is valid for 5 minutes.`
         });
+        if(!successfullySentMail){
+            return res.status(500).json({ message: "Failed to send OTP email. Please try again later." });
+        }
         res.status(201).json({ message: `User ${username} is registered. Please verify OTP sent to ${email}.` });
     } catch (error) {
         console.log("Error While SignUp", error.message);
@@ -108,9 +110,9 @@ export const verifyOTP = async(req, res) => {
 }
 
 export const resendOTP = async(req, res) => {
+    const { email } = req.body;
     try {
-        const { email } = req.body;
-        const user = User.findOne({ email });
+        const user = await User.findOne({ email });
         if(!user) {
             return res.status(404).json({ message: "User not found!" });
         };
@@ -142,12 +144,14 @@ export const login = async(req, res) => {
         if(!user) {
             return res.status(404).json({ message: "User not found!" });
         };
-        const passwordMatch = await bcrypt.compare(password, user.password);
-        if(!passwordMatch) {
-            return res.status(401).json({ message: "Invalid Password!" });
-        };
         if(!user.isVerified) {
             return res.status(401).json({ message: "User not verified!" });
+        }
+        if(!user.isForgotPassword) {
+            const passwordMatch = await bcrypt.compare(password, user.password);
+            if(!passwordMatch) {
+                return res.status(401).json({ message: "Invalid Password!" });
+            };
         }
         
         const token = generateAuthToken(user._id);
@@ -197,6 +201,7 @@ export const forgotPassword = async(req, res) => {
         };
         let newPassword = generateRandomPassword();
         user.password = newPassword;
+        user.isForgotPassword = true; 
         await user.save();
 
         //Send updated password email
@@ -232,13 +237,37 @@ export const updateUserData = async(req, res) => {
         if(username) {
             user.username = username;
         }
-        if(oldPassword && newPassword) {
-            const passwordMatch = await bcrypt.compare(oldPassword, user.password);
-            if(!passwordMatch) {
-                return res.status(401).json({ message: "Invalid Password!" });
+
+        if(oldPassword && !newPassword) {
+            return res.status(400).json({ message: "Please provide new password!" });
+        }
+        if(newPassword && !oldPassword) {
+            return res.status(400).json({ message: "Please provide old password!" });
+        }
+        if(oldPassword === newPassword) {
+            return res.status(400).json({ message: "New password cannot be same as old password!" });
+        }
+        if(!user.isForgotPassword) {
+            if(oldPassword && newPassword) {
+                const passwordMatch = await bcrypt.compare(oldPassword, user.password);
+                console.log("passwordMatch", passwordMatch);
+                if(!passwordMatch) {
+                    return res.status(401).json({ message: "Invalid Password!" });
+                }
+                const hashPassword = await bcrypt.hash(newPassword, 10);
+                user.password = hashPassword;
             }
+            await user.save();
+            res.status(200).json({ message: "User data updated successfully!" });
+        }
+
+        if(oldPassword !== user.password){
+            return res.status(401).json({ message: "Invalid old password!" });
+        }
+        if(newPassword) {
             const hashPassword = await bcrypt.hash(newPassword, 10);
             user.password = hashPassword;
+            user.isForgotPassword = false; 
         }
         await user.save();
         res.status(200).json({ message: "User data updated successfully!" });
@@ -252,7 +281,7 @@ export const addAssetToWatchlist = async (req, res) => {
   const { name, shortName, link, pairType, isCrypto } = req.body;
   const userId = req.user._id;
   try {
-    if (!name || !shortName || !link || !pairType || !isCrypto ) {
+    if (!name || !shortName || !link || !pairType || typeof isCrypto !== 'boolean' ) {
       return res.status(400).json({ message: "All fields are required!" });
     }
     const user = await User.findById(userId);

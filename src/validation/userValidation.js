@@ -21,7 +21,7 @@ export const signup = (req, res, next) => {
 export const verifyOTP = (req, res, next) => {
   const schema = joi.object({
     email: joi.string().email().required().lowercase(),
-    otp: joi.string().required(),
+    otp: joi.number().required(),
   });
 
   schema

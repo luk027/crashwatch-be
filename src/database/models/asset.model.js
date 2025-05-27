@@ -20,6 +20,14 @@ const assetSchema = new mongoose.Schema({
     isCrypto: { 
       type: Boolean,
       default: false
+    },
+    currentPrice: {
+      type: Number,
+      default: 0
+    },
+    change: {
+      type: Number,
+      default: 0
     }
   }, { timestamps: true });
   
